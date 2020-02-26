@@ -6,7 +6,7 @@ import pandas as pd
 import MeCab
 
 
-PAD = -1
+PAD = 1
 BOS = 2
 EOS = 3
 
