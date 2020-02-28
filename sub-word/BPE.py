@@ -33,3 +33,6 @@ for i in range(num_merges):
     print(best)
      
      
+'''
+ref : https://wikidocs.net/22592
+'''
