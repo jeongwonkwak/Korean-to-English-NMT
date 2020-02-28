@@ -1,5 +1,5 @@
 # Korean-to-English Neural Machine Translation (NMT)
-This NMT(Neural Machine Translation) is a model that translates from Korean to English.
+This repo contains the source code and other details for A Neural Machine Translation based on attention using pytorch. This model translates Korean into English. 
 
 ---
 
