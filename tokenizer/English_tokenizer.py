@@ -6,8 +6,6 @@ import pandas as pd
 import MeCab
 
 
-
-
 def English_tokenizer():
     
     df = pd.read_csv("test.csv")
@@ -26,5 +24,7 @@ def English_tokenizer():
     
     sp = spm.SentencePieceProcessor()
     sp.Load('english_tok.model')
+   
     
     return lambda x : sp.EncodeAsPieces(x)
+
