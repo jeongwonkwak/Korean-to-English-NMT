@@ -24,7 +24,7 @@ sentence = "안녕하세요. 감사합니다."
 
 # 1. text -> subword
 print("1. text -> subword", "\n")
-a = sp.EncodeAsPieces(sentence)
+print(sp.EncodeAsPieces(sentence))
 
 
 # 2. text -> subword id
