@@ -6,8 +6,6 @@ import pandas as pd
 import MeCab
 
 
-
-
 def Korean_tokenizer(): 
     
     m = MeCab.Tagger()
@@ -58,6 +56,7 @@ def Korean_tokenizer():
     
     sp = spm.SentencePieceProcessor()
     sp.Load('korean_tok.model')
+    
     
     return lambda x : sp.EncodeAsPieces(x)
  
