@@ -32,7 +32,4 @@ for i in range(num_merges):
     vocab = merge_vocab(best, vocab)
     print(best)
      
-     
-'''
-ref : https://wikidocs.net/22592
-'''
+   
