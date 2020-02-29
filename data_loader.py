@@ -134,7 +134,7 @@ if __name__ == '__main__':
     argv1,2 : src.csv와 tgt.csv파일이 있는 공통 경로
     (argv3, argv4) : 확장자를 포함한 각 파일 이름
     """
-    loader = DataLoader('C:/Users/USER/Capstone/','C:/Users/USER/Capstone/' , ('Korean_new_10.csv','English_new_10.csv'),
+    loader = DataLoader('C:/Users/USER/Capstone/','C:/Users/USER/Capstone/' , ('Korean_sample.csv','English_sample.csv'),
                         shuffle = False, 
                         batch_size = 8
                         )
