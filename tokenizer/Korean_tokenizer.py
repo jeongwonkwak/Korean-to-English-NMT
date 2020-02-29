@@ -40,7 +40,7 @@ def Korean_tokenizer():
         return result # 온전한 문장을 반환
     
     
-    df = pd.read_csv("test.csv")
+    df = pd.read_csv("test_sample.csv")
     KOR_data = df['Korean']
     
     f = open("kor_no_josa.txt", "w", encoding = 'utf-8')
