@@ -127,7 +127,7 @@ class TranslationDataset(data.Dataset):
 
         super(TranslationDataset, self).__init__(examples, fields, **kwargs)
  
-"""        
+'''        
 if __name__ == '__main__':
 
     """
@@ -150,4 +150,4 @@ if __name__ == '__main__':
         
         if batch_index > 1:
             break
-"""
+'''
