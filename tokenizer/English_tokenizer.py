@@ -8,7 +8,7 @@ import MeCab
 
 def English_tokenizer():
     
-    df = pd.read_csv("test.csv")
+    df = pd.read_csv("test_sample.csv")
     ENG_data = df['English']
     
     f = open("eng.txt", "w", encoding = 'utf-8')
