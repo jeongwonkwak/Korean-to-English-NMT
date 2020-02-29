@@ -3,5 +3,5 @@ This repo contains the source code and other details for A Neural Machine Transl
 
 ---
 
-## Capstone Project (2020.01 ~ )
-Weekly Report : [check here](https://github.com/SoYoungCho/Korean-English-NMT/wiki/Weekly-Report-%231) :)
+## Capstone Project (2020.02 ~ )
+From February 2020, the weekly report can be found [here](https://github.com/SoYoungCho/Korean-English-NMT/wiki/Weekly-Report-%231) :)
