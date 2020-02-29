@@ -1,4 +1,6 @@
 # Korean-to-English Neural Machine Translation (NMT)
+> NMT model for Capstone Project
+
 This repo contains the source code and other details for A Neural Machine Translation based on attention using pytorch. This model translates Korean into English. 
 
 ---
