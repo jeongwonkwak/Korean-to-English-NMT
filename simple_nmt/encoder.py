@@ -1,5 +1,10 @@
+import torch
+import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence as pack
+from torch.nn.utils.rnn import pad_packed_sequence as unpack
+
 class Encoder(nn.Module):
-   
+
     def __init__(self, word_vec_dim, hidden_size, n_layers=4, dropout_p=.2):
         super(Encoder, self).__init__()
 
@@ -42,5 +47,5 @@ class Encoder(nn.Module):
 
         if isinstance(emb, tuple):
             y, _ = unpack(y, batch_first=True)
-
+ 
         return y, h
