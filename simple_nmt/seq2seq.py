@@ -3,6 +3,11 @@ import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence as pack
 from torch.nn.utils.rnn import pad_packed_sequence as unpack
 
+from simple_nmt.encoder import Encoder
+from simple_nmt.decoder import Decoder
+from simple_nmt.decoder import Generator
+from simple_nmt.attention import Attention
+
 import data_loader
 # from simple_nmt.search import SingleBeamSearchSpace
 
