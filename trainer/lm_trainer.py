@@ -117,7 +117,9 @@ class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
         evaluator.is_src_target = is_src_target
 
         self.attach(trainer, evaluator, verbose=self.config.verbose)
-
+        
+        losslist = []
+        
         def run_validation(engine, evaluator, valid_loader):
             evaluator.run(valid_loader, max_epochs=1)
 
@@ -144,4 +146,4 @@ class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
         if n_epochs > 0:
             model.load_state_dict(evaluator.best_model)
 
-        return model
+        return model, losslist
