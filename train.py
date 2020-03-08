@@ -104,11 +104,14 @@ def main(config, model_weight=None, opt_weight=None):
     #         seq2seq.cuda(config.gpu_id)
     #         crit.cuda(config.gpu_id)
     
-    for lm, crit in zip(language_models, crits):
+    losslist_src, losslist_tgt = [], []
+
+    for index, lm_crit in enumerate(zip(language_models, crits)):
+        lm, crit = lm_crit
         optimizer = optim.Adam(lm.parameters())
         lm_trainer = LMTrainer(config)
-
-        lm_trainer.train(
+        
+        model_re, losslist = lm_trainer.train(
             lm, crit, optimizer,
             train_loader=loader.train_iter,
             valid_loader=loader.valid_iter,
@@ -116,7 +119,19 @@ def main(config, model_weight=None, opt_weight=None):
             tgt_vocab=loader.tgt.vocab if lm.vocab_size == len(loader.tgt.vocab) else None,
             n_epochs=config.lm_n_epochs,
         )
-        # print(losslist)
+
+        if index == 0:
+            losslist_src = losslist 
+        else:
+            losslist_tgt = losslist
+
+#     print(losslist_src)
+#     print(losslist_tgt)
+        
+    plt.plot(losslist_src, label = "Korean")
+    plt.plot(losslist_tgt, label = "English")
+    plt.legend()
+    plt.show()
 
     
 if __name__ == '__main__':
