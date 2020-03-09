@@ -10,13 +10,14 @@ VERBOSE_EPOCH_WISE = 1
 VERBOSE_BATCH_WISE = 2
 
 
-from simple_nmt.trainer import MaximumLikelihoodEstimationTrainer
+class LanguageModelTrainer():
 
-
-class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
+    def __init__(self, config):
+        self.config = config
 
     @staticmethod
     def step(engine, mini_batch):
+        
         from utils import get_grad_norm, get_parameter_norm
 
         # You have to reset the gradients of all model parameters
@@ -31,7 +32,9 @@ class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
         y = mini_batch.src[0][:, 1:] if engine.is_src_target else mini_batch.tgt[0][:, 1:]
         # |x| = |y| = (batch_size, length)
 
+        ####################### rnnlm foward 진입 #######################
         y_hat = engine.model(x)
+
         # |y_hat| = (batch_size, length, output_size)
 
         loss = engine.crit(y_hat.contiguous().view(-1, y_hat.size(-1)),
@@ -62,6 +65,7 @@ class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
             y = mini_batch.src[0][:, 1:] if engine.is_src_target else mini_batch.tgt[0][:, 1:]
             # |x| = |y| = (batch_size, length)
 
+            ####################### rnnlm foward 진입 #######################
             y_hat = engine.model(x)
             # |y_hat| = (batch_size, length, output_size)
 
@@ -69,8 +73,48 @@ class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
                                y.contiguous().view(-1),
                                ).sum()
             word_count = int(mini_batch.src[1].sum()) if engine.is_src_target else int(mini_batch.tgt[1].sum())
-
+            
         return float(loss / word_count)
+
+    @staticmethod
+    def attach(trainer, evaluator, verbose=VERBOSE_BATCH_WISE):
+
+        from ignite.engine import Events
+        from ignite.metrics import RunningAverage
+        # from ignite.contrib.handlers.tqdm_logger import ProgressBar
+
+        RunningAverage(output_transform=lambda x: x[0]).attach(trainer, 'loss')
+        RunningAverage(output_transform=lambda x: x[1]).attach(trainer, '|param|')
+        RunningAverage(output_transform=lambda x: x[2]).attach(trainer, '|g_param|')
+
+        if verbose >= VERBOSE_EPOCH_WISE:
+            @trainer.on(Events.EPOCH_COMPLETED)
+            def print_train_logs(engine):
+                avg_p_norm = engine.state.metrics['|param|']
+                avg_g_norm = engine.state.metrics['|g_param|']
+                avg_loss = engine.state.metrics['loss']
+
+                print('Epoch {} - |param|={:.2e} |g_param|={:.2e} loss={:.4e} ppl={:.2f}'.format(
+                    engine.state.epoch,
+                    avg_p_norm,
+                    avg_g_norm,
+                    avg_loss,
+                    np.exp(avg_loss),
+                ))
+
+        RunningAverage(output_transform=lambda x: x).attach(evaluator, 'loss')
+
+        if verbose >= VERBOSE_EPOCH_WISE:
+            @evaluator.on(Events.EPOCH_COMPLETED)
+            def print_valid_logs(engine):
+                avg_loss = engine.state.metrics['loss']
+                print('Validation - loss={:.4e} ppl={:.2f} best_loss={:.4e} best_ppl={:.2f}'.format(
+                    avg_loss,
+                    np.exp(avg_loss),
+                    engine.best_loss,
+                    np.exp(engine.best_loss),
+                ))
+                print("--------------------------------------------")
 
     @staticmethod
     def check_best(engine):
@@ -115,16 +159,18 @@ class LanguageModelTrainer(MaximumLikelihoodEstimationTrainer):
         evaluator.model, evaluator.crit = model, crit
         evaluator.best_loss = np.inf
         evaluator.is_src_target = is_src_target
-
+        
         self.attach(trainer, evaluator, verbose=self.config.verbose)
-        
+
         losslist = []
-        
+
         def run_validation(engine, evaluator, valid_loader):
             evaluator.run(valid_loader, max_epochs=1)
+            # if engine.lr_scheduler is not None:
+            #     engine.lr_scheduler.step()
+            losslist.append(evaluator.best_loss)
 
-            if engine.lr_scheduler is not None:
-                engine.lr_scheduler.step()
+
 
         trainer.add_event_handler(
             Events.EPOCH_COMPLETED, run_validation, evaluator, valid_loader
