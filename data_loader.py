@@ -61,35 +61,37 @@ class DataLoader():
                                 tokenize = English_tokenizer()
                                 )
         
-        
+  
+        if train_fn is not None and valid_fn is not None and exts is not None: 
         # train, test(valid) 데이터 틀(앞서 생성한 src, tgt 각각)
-        train = TranslationDataset(path = train_fn, exts = exts,
-                                        fields = [('src', self.src), ('tgt', self.tgt)], 
-                                        max_length = max_length
-                                        )
-        valid = TranslationDataset(path = valid_fn, exts = exts,
-                                        fields = [('src', self.src), ('tgt', self.tgt)], 
-                                        max_length = max_length
-                                        )
-        
-        # 각각의 epoch에 대해 새로 섞인 batch를 생성하면서 반복
-        # train, test(valid)를 각각 나눴으니 아래 작업은 진행해도 무방할 듯
-        self.train_iter = data.BucketIterator(train, 
-                                                batch_size = batch_size, 
-                                                shuffle = shuffle, 
-                                                sort_key=lambda x: len(x.tgt) + (max_length * len(x.src)), 
-                                                sort_within_batch = True
-                                                )
+            train = TranslationDataset(path = train_fn, exts = exts,
+                                            fields = [('src', self.src), ('tgt', self.tgt)], 
+                                            max_length = max_length
+                                            )
+            valid = TranslationDataset(path = valid_fn, exts = exts,
+                                            fields = [('src', self.src), ('tgt', self.tgt)], 
+                                            max_length = max_length
+                                            )
 
-        self.valid_iter = data.BucketIterator(valid, 
-                                                batch_size = batch_size, 
-                                                shuffle = False, 
-                                                sort_key=lambda x: len(x.tgt) + (max_length * len(x.src)), 
-                                                sort_within_batch = True
-                                                )
-        
-        self.src.build_vocab(train, max_size = max_vocab)
-        self.tgt.build_vocab(train, max_size = max_vocab)
+
+            # 각각의 epoch에 대해 새로 섞인 batch를 생성하면서 반복
+            # train, test(valid)를 각각 나눴으니 아래 작업은 진행해도 무방할 듯
+            self.train_iter = data.BucketIterator(train, 
+                                                    batch_size = batch_size, 
+                                                    shuffle = shuffle, 
+                                                    sort_key=lambda x: len(x.tgt) + (max_length * len(x.src)), 
+                                                    sort_within_batch = True
+                                                    )
+
+            self.valid_iter = data.BucketIterator(valid, 
+                                                    batch_size = batch_size, 
+                                                    shuffle = False, 
+                                                    sort_key=lambda x: len(x.tgt) + (max_length * len(x.src)), 
+                                                    sort_within_batch = True
+                                                    )
+            
+            self.src.build_vocab(train, max_size = max_vocab)
+            self.tgt.build_vocab(train, max_size = max_vocab)
 
     def load_vocab(self, src_vocab, tgt_vocab):
         self.src.vocab = src_vocab
