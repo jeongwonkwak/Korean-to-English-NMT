@@ -33,12 +33,37 @@ def HyperParams():
     "use_noam_decay": True,
     "lr_n_warmup_steps": 48000,
 
-    "lm_n_epochs": 10,
-    "lm_batch_size": 512,
+    "lm_n_epochs": 2,
+    "lm_batch_size": 5,
 
     "use_transformer": False,
     "n_splits": 8,
-    "use_cuda": 1
+    "use_cuda": 1,
+
+    "dsl": True,
+    "dsl_n_epochs": 2,
+    "dsl_lambda": 1e-3
     })
     
     return hparams
+
+
+def HyperParams_translate():
+
+    hparams_translate = easydict.EasyDict({
+
+    "model": 'revise.17.1.37-3.94.1.13-3.09.1.20-3.33.1.02-2.78.model',
+    "train": 'C:/Users/USER/Capstone/', 
+    "valid": 'C:/Users/USER/Capstone/',
+    "lang": 'Korean_sample.csvEnglish_sample.csv',
+    "gpu_id": 0,
+        
+    "batch_size": 128,
+    "max_length": 255,
+    "n_best": 1,
+
+    "beam_size": 5,
+    "length_penalty": 1.2
+    })
+    
+    return hparams_translate
