@@ -7,57 +7,14 @@ import torch
 
 from data_loader import DataLoader
 import data_loader
+
 from simple_nmt.seq2seq import Seq2Seq
-from simple_nmt.transformer import Transformer
+from simple_nmt.encoder import Encoder
+from simple_nmt.decoder import Decoder
+from simple_nmt.decoder import Generator
+from simple_nmt.attention import Attention
 
-
-def define_argparser():
-    p = argparse.ArgumentParser()
-
-    p.add_argument('--model',
-                   required=True,
-                   help='Model file name to use'
-                   )
-    p.add_argument('--gpu_id',
-                   type=int,
-                   default=-1,
-                   help='GPU ID to use. -1 for CPU. Default=%(default)s'
-                   )
-
-    p.add_argument('--batch_size',
-                   type=int,
-                   default=128,
-                   help='Mini batch size for parallel inference. Default=%(default)s'
-                   )
-    p.add_argument('--max_length',
-                   type=int,
-                   default=255,
-                   help='Maximum sequence length for inference. Default=%(default)s'
-                   )
-    p.add_argument('--n_best',
-                   type=int,
-                   default=1,
-                   help='Number of best inference result per sample. Default=%(default)s'
-                   )
-    p.add_argument('--beam_size',
-                   type=int,
-                   default=5,
-                   help='Beam size for beam search. Default=%(default)s'
-                   )
-    p.add_argument('--lang',
-                   type=str,
-                   default=None,
-                   help='Source language and target language. Example: enko'
-                   )
-    p.add_argument('--length_penalty',
-                   type=float,
-                   default=1.2,
-                   help='Length penalty parameter that higher value produce shorter results. Default=%(default)s',
-                   )
-
-    config = p.parse_args()
-
-    return config
+from hyperparams import HyperParams_translate
 
 
 def read_text():
@@ -96,10 +53,10 @@ def to_text(indice, vocab):
 
 if __name__ == '__main__':
     sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
-    config = define_argparser()
+    config = HyperParams_translate()
 
     # Load saved model.
-    saved_data = torch.load(config.model, map_location='cpu' if config.gpu_id < 0 else 'cuda:%d' % config.gpu_id)
+    saved_data = torch.load(config.model, map_location='cpu')
 
     # Load configuration setting in training.
     train_config = saved_data['config']
@@ -127,35 +84,25 @@ if __name__ == '__main__':
     # Initialize dataloader, but we don't need to read training & test corpus.
     # What we need is just load vocabularies from the previously trained model.
     loader = DataLoader()
+
     loader.load_vocab(src_vocab, tgt_vocab)
     input_size = len(loader.src.vocab)
     output_size = len(loader.tgt.vocab)
 
     # Declare sequence-to-sequence model.
-    if train_config.use_transformer:
-        model = Transformer(
-            input_size,
-            train_config.hidden_size,
-            output_size,
-            n_splits=train_config.n_splits,
-            n_enc_blocks=train_config.n_layers,
-            n_dec_blocks=train_config.n_layers,
-            dropout_p=train_config.dropout,
-        )
-    else:
-        model = Seq2Seq(input_size,
-                        train_config.word_vec_size,
-                        train_config.hidden_size,
-                        output_size,
-                        n_layers=train_config.n_layers,
-                        dropout_p=train_config.dropout
-                        )
-
+    model = Seq2Seq(input_size,
+                  train_config.word_vec_size,
+                  train_config.hidden_size,
+                  output_size,
+                  n_layers=train_config.n_layers,
+                  dropout_p=train_config.dropout
+                  )
+    
     if train_config.dsl:
         if not is_reverse:
-            model.load_state_dict(saved_data['models'][0])
+            model.load_state_dict(saved_data['model'][0])
         else:
-            model.load_state_dict(saved_data['models'][1])
+            model.load_state_dict(saved_data['model'][1])
     else:
         model.load_state_dict(saved_data['model'])  # Load weight parameters from the trained model.
     model.eval()  # We need to turn-on the evaluation mode, which turns off all drop-outs.
@@ -164,12 +111,12 @@ if __name__ == '__main__':
     torch.set_grad_enabled(False)
 
     # Put models to device if it is necessary.
-    if config.gpu_id >= 0:
-        model.cuda(config.gpu_id)
+    # if config.gpu_id >= 0:
+    #     model.cuda(config.gpu_id)
 
     # Get sentences from standard input.
     lines = read_text()
-
+    
     with torch.no_grad():  # Also, declare again to prevent to get gradients.
         while len(lines) > 0:
             # Since packed_sequence must be sorted by decreasing order of length,
@@ -177,7 +124,7 @@ if __name__ == '__main__':
             # Therefore, we need to memorize the original index of the sentence.
             sorted_lines = lines[:config.batch_size]
             lines = lines[config.batch_size:]
-
+           
             lengths = [len(_) for _ in sorted_lines]
             orders = [i for i in range(len(sorted_lines))]
 
@@ -193,7 +140,7 @@ if __name__ == '__main__':
             x = loader.src.numericalize(loader.src.pad(sorted_lines),
                                         device='cuda:%d' % config.gpu_id if config.gpu_id >= 0 else 'cpu'
                                         )
-
+          
             if config.beam_size == 1:
                 # Take inference for non-parallel beam-search.
                 y_hat, indice = model.search(x)
@@ -221,3 +168,4 @@ if __name__ == '__main__':
 
                 for i in range(len(output)):
                     sys.stdout.write('\n'.join(output[i]) + '\n')
+
